@@ -10,7 +10,8 @@
     "debug": "latest",
     "express": "latest",
     "http-errors": "latest",
-    "pug": "latest",
-    "morgan": "latest"
+    "morgan": "latest",
+    "pg-promise": "^10.6.1",
+    "pug": "latest"
   }
 }
