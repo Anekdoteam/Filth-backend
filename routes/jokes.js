@@ -1,6 +1,20 @@
 var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
+<<<<<<< Updated upstream
+=======
+var pgp = require('pg-promise')(/* options */)
+
+require('dotenv').config();			// Now require dotenv for environment variables
+
+// Коннектимся к БД с переменными среды
+const POSTGRES_USER = process.env.PGUSER.replace('/["]+/', '');
+const POSTGRES_PASSWORD = process.env.PGPW.replace('/["]+/', '');
+const POSTGRES_HOST = process.env.PGHOST.replace('/["]+/', '');
+const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
+
+var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth') // TODO: change hardcoded constants to env variables
+>>>>>>> Stashed changes
 
 
 router.get('/', function(req, res, next) {
