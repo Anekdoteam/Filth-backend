@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "startdb": "./bin/startdb.ps1"
+    "startdb": "node ./bin/startdb"
   },
   "dependencies": {
     "cookie-parser": "latest",
     "debug": "latest",
+    "dotenv": "^8.2.0",
     "express": "latest",
     "http-errors": "latest",
     "morgan": "latest",

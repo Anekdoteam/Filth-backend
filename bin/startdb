@@ -1,0 +1,106 @@
+#!/usr/bin/env node
+
+// dump command - C:\\"Program Files"\\PostgreSQL\\12\\bin\\pg_dump.exe --clean --encoding utf8 -U postgres -s Filth > filth-model2.sql
+const { exec } = require("child_process");
+var args = process.argv.slice(2);
+require('dotenv').config();
+
+/**
+ * Start postgres service if not running
+ */
+var check = checkService();
+if (check == -1){
+    return;
+}else if (check == 0){
+    startService();
+}
+
+/**
+ * Set up database model if -restore flag is present
+ */
+if(args.indexOf('-restore_model') >= 0){
+    console.log('Restoring the database model...');
+    restoreDB();
+}
+
+
+function checkService(){
+    exec("sc.exe query postgresql-x64-12", (error, stdout, stderr) => {
+        if (error) {
+            console.log(`Error while checking postgresql-x64-12 service:\n\n ${error.message}`);
+            return -1;
+        }
+        if (stderr) {
+            console.log(`Stderr from checking postgresql-x64-12:\n\n ${stderr}`);
+            return -1;
+        }
+        
+        //console.log(`Stdout from checking postgresql-x64-12:\n\n ${stdout}`);
+        if(stdout.includes('RUNNING')){
+            console.log('postgresql-x64-12 is already running! Skipping starting it...');
+            return 1;
+        }else{
+            return 0;
+        }
+    });
+}
+
+function startService(){
+    exec("net start postgresql-x64-12", (error, stdout, stderr) => {
+        if (error) {
+            console.log(`Error while starting postgresql-x64-12 service:\n\n ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`Stderr from starting postgresql-x64-12:\n\n ${stderr}`);
+            return;
+        }
+        console.log(`Stdout from starting postgresql-x64-12:\n\n ${stdout}`);
+    });
+}
+
+/* TODO:
+function restoreDB(){
+    exec(`"${process.env.PGPATH}\\psql.exe" -U postgres -d Filth -f ./database/filth-model.sql --encoding SQL_ASCII`, (error, stdout, stderr) => {
+        if (error) {
+            console.log(`Error while restoring DB model:\n\n ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`Stderr from restoring DB model:\n\n ${stderr}`);
+            return;
+        }
+        console.log(`Stdout from restoring DB model:\n\n ${stdout}`);
+    });
+}*/
+
+
+
+
+
+/*
+#TODO: do checks, if successful - set up db model
+
+$pg_path = $args[0]
+
+if ($pg_path -contains 'YOUR_PG_PATH_HERE'){
+    echo 'Please write the to your postgres binaries directory into the "startdb" script in package.json!';
+}
+else{
+    echo 'Starting the postgresql service';
+    Start-Process net -Verb RunAs -Args "start postgresql-x64-12" -Wait;
+    echo "Don't forget to create a db first!";
+    
+    #TODO: create db if not exists
+    #why is it so painful
+    
+    #$create_db_query = "SELECT 'CREATE DATABASE Filth' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'Filth')\gexec"
+    #echo $create_db_query | Start-Process $pg_path'\psql.exe' -Args "-U postgres" -Wait;
+    
+    echo 'Rolling the db model';
+    Start-Process $pg_path'\psql.exe' -Args "-U postgres -d Filth -f ./database/filth-model.sql" -Wait;
+}
+
+
+#echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql
+*/
