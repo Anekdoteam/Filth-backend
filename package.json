@@ -9,6 +9,7 @@
   "dependencies": {
     "cookie-parser": "latest",
     "debug": "latest",
+    "dotenv": "^8.2.0",
     "express": "latest",
     "http-errors": "latest",
     "morgan": "latest",
