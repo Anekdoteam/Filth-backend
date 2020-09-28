@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "cookie-parser": "latest",
+    "cors": "^2.8.5",
     "debug": "latest",
     "dotenv": "^8.2.0",
     "express": "latest",

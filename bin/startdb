@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// dump command - C:\\"Program Files"\\PostgreSQL\\12\\bin\\pg_dump.exe --clean --encoding utf8 -U postgres -s Filth > filth-model2.sql
+// dump command - C:\\"Program Files"\\PostgreSQL\\12\\bin\\pg_dump.exe --clean --if-exists --encoding utf8 -U postgres -s Filth > filth-model2.sql
 const { exec } = require("child_process");
 var args = process.argv.slice(2);
 require('dotenv').config();
