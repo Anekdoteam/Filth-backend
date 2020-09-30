@@ -17,9 +17,9 @@ router.get('/', function(req, res, next) {
     next(createError(403));
 });
 
-// Get all jokes from the database
-router.get('/getJokes', function(req, res, next) {
-    db.any('SELECT * FROM public."Joke" AS jokes')
+/// Параметры - offset (начиная с какого) и limit (сколько)(!!!)
+router.get('/getJokes/:offset-:limit', function(req, res, next) {
+    db.any('SELECT * FROM public."Joke" AS jokes OFFSET $1 LIMIT $2', [req.params.offset, req.params.limit])
         .then(function (data) {
             if(data.length==0){
                 console.log('No jokes returned');
@@ -35,9 +35,11 @@ router.get('/getJokes', function(req, res, next) {
         })
 });
 
+
+/// Единственный параметр - tag (тэг, по которому ведётся поиск)
 router.get('/getJokesByTag/:tag', function(req, res, next) {
-	db.any('SELECT * FROM ("public"."Joke" JOIN "public"."JokesTags" ON "Joke"."jid" = "JokesTags"."jid") as "joined" WHERE "joined"."tid" IN (SELECT "tid" FROM "public"."Tag" WHERE "name" = $1) LIMIT 1;', req.params.tag) // remove LIMIT 1 after making "name" unique
-	.then(function(data) {
+	db.any('SELECT * FROM ("public"."Joke" JOIN "public"."JokesTags" ON "Joke"."jid" = "JokesTags"."jid") as "joined" WHERE "joined"."tid" IN (SELECT "tid" FROM "public"."Tag" WHERE "name" = $1);', req.params.tag)
+    	.then(function(data) {
 		if (data.length == 0) {
 			console.log('No jokes found by this tag.');
 			res.json({'success': true, 'jokes': []});
@@ -51,9 +53,10 @@ router.get('/getJokesByTag/:tag', function(req, res, next) {
 	}) 
 });
 
+
+/// Параметры - name (название шутки), content (текст шутки) и tags (массив тэгов). 
 router.get('/addJoke*', function(req, res,next) {
     if (req.query.tags.length != 0) {
-
         for (i = 0; i < req.query.tags.length; i++) {
             let tagsArray = req.query.tags;
 
@@ -64,15 +67,12 @@ router.get('/addJoke*', function(req, res,next) {
                     console.log("No tag '" + tagsArray[iter] + "' found in db.");
                     db.any('INSERT INTO "public"."Tag"(name) VALUES ($1);', tagsArray[iter]).then(function(data) {
                         console.log("Data from inserting tag: " + data);
-                        //res.json({'success': true, 'tid': data.tid});
                     }).catch(function(error) {
                         console.log('ERROR: ');
-                        //res.json({'success': false, 'error': error});
+                        res.json({'success': false, 'error': error});
                     });
                 } else {
                     console.log("All tags are already added.");
-                    
-                    //res.json({'success': true, 'data': ''});
                 }
             }.bind(null, req.query.tags, i)).catch(function(error) {
                 console.log('ERROR: ', error);
@@ -83,8 +83,6 @@ router.get('/addJoke*', function(req, res,next) {
         db.any('INSERT INTO "public"."Joke"(content, title) VALUES ($1, $2)', [req.query.content, req.query.name]).then(function(data) {
             console.log("Joke inserted successfuly, jid: " + data.jid);
             console.log(data);
-            
-            //res.json({'success': true})
         }).catch(function(error) {
             console.log('ERROR: ', error);
             res.json({'success': false, 'error': error});
@@ -108,20 +106,18 @@ router.get('/addJoke*', function(req, res,next) {
                     array.push(data[i].tid);
                 }
             }
-            //console.log(data[0]);
             console.log("Saved ids: " + array);
             db.one('SELECT jid FROM "public"."Joke" WHERE "content" = $1;', req.query.content).then((data) => {
                 console.log("Data: ", data.jid);
                 for (i = 0; i < array.length; i++) {
                 db.any('INSERT INTO "public"."JokesTags" VALUES ($1, $2)', [data.jid, array[i]]).then((data) => {
                     console.log("Tied two tables together.");
-                    //res.json({'success': true});
                 }).catch(error => {
                     console.log("ERROR: ", error);
                     res.json({'success': false, 'error': error});
                 });
             }
-            }).catch(error => {
+            }).catch((error) => {
                 console.log("ERROR: ", error);
                 res.json({'success': false, 'error': error});
             });
@@ -132,10 +128,64 @@ router.get('/addJoke*', function(req, res,next) {
         });
         res.json({'success': true});
     }
+});
 
-    //db.none('INSERT INTO "public"."Jokes" VALUES ');
-    //res.send("Params are: " + req.query.name + ", " + req.query.content + ", " + req.query.tags); /// Tags - будет массив, поэтому можно получать несколько тэгов
-    //res.send("Tags size: " + req.query.tags.length);
+
+/// Параметры - jid (идентификатор шутки), uid (идентификатор пользователя) 
+router.get('/likeJoke/:uid/:jid', function(req, res, next) {
+    console.log(req.params);
+    db.oneOrNone('SELECT count(*) as "cnt", "isLiked" FROM "public"."UsersJokes" WHERE "uid" = $1 AND "jid" = $2 GROUP BY "isLiked";', [req.params.uid, req.params.jid]).then(data => {
+        console.log("Data: ", data);
+        if (data.cnt == 0) {
+            db.none('INSERT INTO "public"."UsersJokes" VALUES ($1, $2, true)', [req.params.uid, req.params.jid]).then(data => {
+                console.log("Data: ", data);
+            }).catch(error => {
+                console.log("ERROR: ", error);
+                res.json({'success': false, 'error': error});
+            })
+
+            db.none('UPDATE "public"."Joke" SET "rating" = "rating" + 1 WHERE "jid" = $1;', req.params.jid).then((data) => {
+                console.log("Like added successfuly, query result: ", data);
+                res.json({'success': true});
+            }).catch(error => {
+                console.log('ERROR: ', error);
+                res.json({'success': false, 'error': error});
+            })
+        } else if (data.cnt == 1) {
+            var rateSign, rateBool, resultString, jsonResult;
+            if (data.isLiked == true) {
+                rateSign = '-';
+                rateBool = 'false';
+                resultString = 'Un-liked successfuly, ';
+                jsonResult = 'un-liked';
+            } else {
+                rateSign = '+';
+                rateBool = 'true';
+                resultString = 'Liked successfuly, ';
+                jsonResult = 'liked';
+            }
+
+            db.none('UPDATE "public"."Joke" SET "rating" = "rating" ' + rateSign + ' 1 WHERE "jid" = $1;', req.params.jid).then((data) => {
+                console.log(resultString, data);
+                res.json({'success': true, 'action': jsonResult});
+            }).catch(error => {
+                console.log('ERROR: ', error);
+                res.json({'success': false, 'error': error});
+            })
+
+            db.none('UPDATE "public"."UsersJokes" SET "isLiked" = ' + rateBool + ' WHERE "uid" = $1 AND "jid" = $2;', [req.params.uid, req.params.jid]).then(data => {
+                console.log("Data: ", data);
+            }).catch(error => {
+                console.log("ERROR: ", error);
+                res.json({'success': false, 'error': error});
+            })
+        }
+        
+    }).catch(error => {
+        console.log("ERROR: ", error);
+        res.json({'success': false, 'error': error});
+    })
+
 });
 
 
