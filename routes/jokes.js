@@ -17,14 +17,19 @@ router.get('/', function(req, res, next) {
     next(createError(403));
 });
 
-/// Параметры - offset (начиная с какого) и limit (сколько)(!!!)
-router.get('/getJokes/:offset-:limit', function(req, res, next) {
-    db.any('SELECT * FROM public."Joke" AS jokes OFFSET $1 LIMIT $2', [req.params.offset, req.params.limit])
+/// Параметры - offset (начиная с какого), limit (сколько)(!!!) и sort (0(desc)|1(asc))
+router.get('/getJokes/:offset-:limit&:sort', function(req, res, next) {
+	if (req.params.sort == 1) {
+		sorter = 'SELECT * FROM public."Joke" AS jokes ORDER BY "jid" ASC OFFSET $1 LIMIT $2;';
+	} else if (req.params.sort == 0) {
+		sorter = 'SELECT * FROM public."Joke" AS jokes ORDER BY "jid" DESC OFFSET $1 LIMIT $2;';
+	}
+    db.any(sorter, [req.params.offset, req.params.limit])
         .then(function (data) {
-            if(data.length==0){
+            if (data.length==0) {
                 console.log('No jokes returned');
                 res.json({'success':true,'jokes':[]});
-            }else{
+            } else {
                 console.log('Successfully returned some jokes, count: '+data.length);
                 res.json({'success':true,'jokes':data});
             }
@@ -56,78 +61,109 @@ router.get('/getJokesByTag/:tag', function(req, res, next) {
 
 /// Параметры - name (название шутки), content (текст шутки) и tags (массив тэгов). 
 router.get('/addJoke*', function(req, res,next) {
-    if (req.query.tags.length != 0) {
-        for (i = 0; i < req.query.tags.length; i++) {
-            let tagsArray = req.query.tags;
+	db.oneOrNone('SELECT * FROM "public"."Joke" WHERE "content" = $1', req.query.content).then(data => {
+		console.log("Unique checking: " + data);
+		if (data == null) {
+			if (Array.isArray(req.query.tags)) {
+				console.log("tags is array, so there're 2 or more tags.");
+			} else console.log("Just one tag.");
 
-            db.oneOrNone('SELECT "tid" FROM "public"."Tag" WHERE "name" = $1;', tagsArray[i]).then(function(tagsArray, iter, data) {
-                console.log(tagsArray[0]);
-                console.log(iter);
-                if (data == undefined) {
-                    console.log("No tag '" + tagsArray[iter] + "' found in db.");
-                    db.any('INSERT INTO "public"."Tag"(name) VALUES ($1);', tagsArray[iter]).then(function(data) {
-                        console.log("Data from inserting tag: " + data);
-                    }).catch(function(error) {
-                        console.log('ERROR: ');
-                        res.json({'success': false, 'error': error});
-                    });
-                } else {
-                    console.log("All tags are already added.");
-                }
-            }.bind(null, req.query.tags, i)).catch(function(error) {
-                console.log('ERROR: ', error);
-                res.json({'success': false, 'error': error});
-            });
-        }   
+		    if (req.query.tags.length != 0) {
+		    	if (Array.isArray(req.query.tags)) {
+		    		cycleCounter = req.query.tags.length;
+		    	} else cycleCounter = 1;
 
-        db.any('INSERT INTO "public"."Joke"(content, title) VALUES ($1, $2)', [req.query.content, req.query.name]).then(function(data) {
-            console.log("Joke inserted successfuly, jid: " + data.jid);
-            console.log(data);
-        }).catch(function(error) {
-            console.log('ERROR: ', error);
-            res.json({'success': false, 'error': error});
-        });
+		        for (i = 0; i < cycleCounter; i++) {
+		        	let tagsArray
+		        	if (Array.isArray(req.query.tags)) {
+		        		console.log("Checking array:", req.query.tags[i]);
+		        		tagsArray = req.query.tags[i];
+		        	} else {
+		        		tagsArray = req.query.tags;
+		        	}
+		            
+		            db.oneOrNone('SELECT "tid" FROM "public"."Tag" WHERE "name" = $1;', tagsArray).then(function(tagsArray, iter, data) {
+		                console.log(tagsArray);
+		                console.log(iter);
+		                if (data == undefined) {
+		                    console.log("No tag '" + tagsArray + "' found in db.");
+		                    db.any('INSERT INTO "public"."Tag"(name) VALUES ($1);', tagsArray).then(function(data) {
+		                        console.log("Data from inserting tag: " + data);
+		                    }).catch(function(error) {
+		                        console.log('ERROR: ');
+		                        res.json({'success': false, 'error': error});
+		                    });
+		                } else {
+		                    console.log("All tags are already added.");
+		                }
+		            }.bind(null, tagsArray, i)).catch(function(error) {
+		                console.log('ERROR: ', error);
+		                res.json({'success': false, 'error': error});
+		            });
+		        }   
 
-        var que = 'SELECT tid FROM "public"."Tag" WHERE "name" IN (';
-        console.log("Length: " + req.query.tags.length);
-        for (i = 0; i < req.query.tags.length; i++) {
-            console.log(req.query.tags[i]);
-            if (i == 0) {
-                que = que.concat("'", req.query.tags[i], "'");
-            } else que = que.concat(", '", req.query.tags[i], "'");
-        }
-        que = que.concat(');');
-        console.log(que);
-        var array = [];       
-        db.any(que).then(function(array, data) {
-            if (data.length != 0) {
-                for (i = 0; i < data.length; i++) {
-                    console.log("Data: " + data[i].tid);
-                    array.push(data[i].tid);
-                }
-            }
-            console.log("Saved ids: " + array);
-            db.one('SELECT jid FROM "public"."Joke" WHERE "content" = $1;', req.query.content).then((data) => {
-                console.log("Data: ", data.jid);
-                for (i = 0; i < array.length; i++) {
-                db.any('INSERT INTO "public"."JokesTags" VALUES ($1, $2)', [data.jid, array[i]]).then((data) => {
-                    console.log("Tied two tables together.");
-                }).catch(error => {
-                    console.log("ERROR: ", error);
-                    res.json({'success': false, 'error': error});
-                });
-            }
-            }).catch((error) => {
-                console.log("ERROR: ", error);
-                res.json({'success': false, 'error': error});
-            });
+		        db.any('INSERT INTO "public"."Joke"(content, title) VALUES ($1, $2)', [req.query.content, req.query.name]).then(function(data) {
+		            console.log("Joke inserted successfuly, jid: " + data.jid);
+		            console.log(data);
+		        }).catch(function(error) {
+		            console.log('ERROR: ', error);
+		            res.json({'success': false, 'error': error});
+		        });
 
-        }.bind(null, array)).catch((error) => {
-            console.log("ERROR: ", error);
-            res.json({'success': false, 'error': error});
-        });
-        res.json({'success': true});
-    }
+		        var que = 'SELECT tid FROM "public"."Tag" WHERE "name" IN (';
+		        console.log("Length: " + req.query.tags.length);
+		        for (i = 0; i < cycleCounter; i++) {
+		            console.log(req.query.tags[i]);
+		        	if (Array.isArray(req.query.tags)) {
+		        		if (i == 0) {
+		                	que = que.concat("'", req.query.tags[i], "'");
+		            	} else que = que.concat(", '", req.query.tags[i], "'");
+		        	} else {
+		        		que = que.concat("'", req.query.tags, "'");
+		        	}
+
+		        }
+		        que = que.concat(');');
+		        console.log(que);
+		        var array = [];       
+		        db.any(que).then(function(array, data) {
+		            if (data.length != 0) {
+		                for (i = 0; i < data.length; i++) {
+		                    console.log("Data: " + data[i].tid);
+		                    array.push(data[i].tid);
+		                }
+		            }
+		            console.log("Saved ids: " + array);
+		            db.one('SELECT jid FROM "public"."Joke" WHERE "content" = $1;', req.query.content).then((data) => {
+		                console.log("Data: ", data.jid);
+		                for (i = 0; i < array.length; i++) {
+		                db.any('INSERT INTO "public"."JokesTags" VALUES ($1, $2)', [data.jid, array[i]]).then((data) => {
+		                    console.log("Tied two tables together.");
+		                }).catch(error => {
+		                    console.log("ERROR: ", error);
+		                    res.json({'success': false, 'error': error});
+		                });
+		            }
+		            }).catch((error) => {
+		                console.log("ERROR: ", error);
+		                res.json({'success': false, 'error': error});
+		            });
+
+		        }.bind(null, array)).catch((error) => {
+		            console.log("ERROR: ", error);
+		            res.json({'success': false, 'error': error});
+		        });
+		        res.json({'success': true});
+		    }
+		} else {
+			res.json({'success': false, 'reason': "This joke was already added by someone else."});
+		}
+	}).catch(error => {
+		console.log("ERROR: ", error);
+		res.json({'success': false, 'error': error});
+	});
+		
+	
 });
 
 
