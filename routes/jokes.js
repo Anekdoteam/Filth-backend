@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
-var pgp = require('pg-promise')(/* options */)
+var pgp = require('pg-promise')(/* options */);
 
 require('dotenv').config();			// Now require dotenv for environment variables
 
@@ -11,7 +11,7 @@ const POSTGRES_PASSWORD = process.env.PGPW.replace('/["]+/', '');
 const POSTGRES_HOST = process.env.PGHOST.replace('/["]+/', '');
 const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
 
-var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth') // TODO: change hardcoded constants to env variables
+var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth'); // TODO: change hardcoded constants to env variables
 
 router.get('/', function(req, res, next) {
     next(createError(403));
@@ -37,14 +37,14 @@ router.get('/getJokes/:offset-:limit&:sort', function(req, res, next) {
         .catch(function (error) {
             console.log('ERROR: ', error);
             res.json({'success':false,'error':error});
-        })
+        });
 });
 
 
 /// Единственный параметр - tag (тэг, по которому ведётся поиск)
 router.get('/getJokesByTag/:tag', function(req, res, next) {
 	db.any('SELECT * FROM ("public"."Joke" JOIN "public"."JokesTags" ON "Joke"."jid" = "JokesTags"."jid") as "joined" WHERE "joined"."tid" IN (SELECT "tid" FROM "public"."Tag" WHERE "name" = $1);', req.params.tag)
-    	.then(function(data) {
+        .then(function(data) {
 		if (data.length == 0) {
 			console.log('No jokes found by this tag.');
 			res.json({'success': true, 'jokes': []});
@@ -55,7 +55,7 @@ router.get('/getJokesByTag/:tag', function(req, res, next) {
 	}).catch(function (error) {
 		console.log('ERROR: ', error);
 		res.json({'success': false, 'error': error});
-	}) 
+	}); 
 });
 
 
@@ -162,8 +162,6 @@ router.get('/addJoke*', function(req, res,next) {
 		console.log("ERROR: ", error);
 		res.json({'success': false, 'error': error});
 	});
-		
-	
 });
 
 
@@ -178,7 +176,7 @@ router.get('/likeJoke/:uid/:jid', function(req, res, next) {
             }).catch(error => {
                 console.log("ERROR: ", error);
                 res.json({'success': false, 'error': error});
-            })
+            });
 
             db.none('UPDATE "public"."Joke" SET "rating" = "rating" + 1 WHERE "jid" = $1;', req.params.jid).then((data) => {
                 console.log("Like added successfuly, query result: ", data);
@@ -186,7 +184,7 @@ router.get('/likeJoke/:uid/:jid', function(req, res, next) {
             }).catch(error => {
                 console.log('ERROR: ', error);
                 res.json({'success': false, 'error': error});
-            })
+            });
         } else if (data.cnt == 1) {
             var rateSign, rateBool, resultString, jsonResult;
             if (data.isLiked == true) {
@@ -207,20 +205,20 @@ router.get('/likeJoke/:uid/:jid', function(req, res, next) {
             }).catch(error => {
                 console.log('ERROR: ', error);
                 res.json({'success': false, 'error': error});
-            })
+            });
 
             db.none('UPDATE "public"."UsersJokes" SET "isLiked" = ' + rateBool + ' WHERE "uid" = $1 AND "jid" = $2;', [req.params.uid, req.params.jid]).then(data => {
                 console.log("Data: ", data);
             }).catch(error => {
                 console.log("ERROR: ", error);
                 res.json({'success': false, 'error': error});
-            })
+            });
         }
         
     }).catch(error => {
         console.log("ERROR: ", error);
         res.json({'success': false, 'error': error});
-    })
+    });
 
 });
 
