@@ -11,7 +11,7 @@ const POSTGRES_PASSWORD = process.env.PGPW.replace('/["]+/', '');
 const POSTGRES_HOST = process.env.PGHOST.replace('/["]+/', '');
 const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
 
-var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth'); // TODO: change hardcoded constants to env variables
+var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth');
 
 router.get('/', function(req, res, next) {
     next(createError(403));

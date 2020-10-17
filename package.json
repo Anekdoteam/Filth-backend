@@ -8,13 +8,17 @@
     "lint": "npx eslint ./"
   },
   "dependencies": {
+    "connect-flash": "^0.1.1",
     "cookie-parser": "latest",
     "cors": "^2.8.5",
     "debug": "latest",
     "dotenv": "^8.2.0",
     "express": "latest",
+    "express-session": "^1.17.1",
     "http-errors": "latest",
     "morgan": "latest",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
     "pg-promise": "^10.6.1",
     "pug": "latest"
   },
