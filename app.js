@@ -34,7 +34,8 @@ app.use(passport.session());
 app.use(cookieParser('keyboard cat'));
 
 app.use(flash());
-
+// Disable x-powered-by fingerprinting
+app.disable("x-powered-by");
 
 app.use('/', indexRouter);
 app.use('/jokes', jokesRouter);
