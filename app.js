@@ -43,7 +43,7 @@ app.use('/', indexRouter);
 app.use('/jokes', jokesRouter);
 app.use('/login', loginRouter);
 /*app.post('/login', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (res, req) => {
-	res.json({lol: "kek"});
+res.json({lol: "kek"});
 });/*/
 
 
@@ -55,7 +55,7 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
+// set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
@@ -73,19 +73,19 @@ const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
 var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth');*/
 
 /*passport.use(new LocalStrategy({passReqToCallback: true}, (req, username, password, done) => {
-	console.log("Strategy called.");
-	db.oneOrNone('SELECT "password" FROM "public"."User" WHERE "username" = $1;', username).then(function (password, data) {
-		if (!data) {
-			console.log("works");
-			return done(null, false, {message: "User not found"});
-		} else {
-			console.log("Data: " + data);
-			//if (data)
-		}
-	}.bind(password)).catch((error) => {
-		console.log('ERROR: ', error);
-		res.json({'success': false, 'error': error});
-	})
+console.log("Strategy called.");
+db.oneOrNone('SELECT "password" FROM "public"."User" WHERE "username" = $1;', username).then(function (password, data) {
+if (!data) {
+console.log("works");
+return done(null, false, {message: "User not found"});
+} else {
+console.log("Data: " + data);
+//if (data)
+}
+}.bind(password)).catch((error) => {
+console.log('ERROR: ', error);
+res.json({'success': false, 'error': error});
+})
 }));*/
 
 module.exports = app;

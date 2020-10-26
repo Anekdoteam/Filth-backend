@@ -11,6 +11,7 @@
     "rules": {
             "semi": ["warn", "always"],
             "no-unused-vars": ["off", {"args": "after-used"}],
-            "no-redeclare": ["off"]
+            "no-redeclare": ["off"],
+            "indent": ["error", 2]
     }
 }
