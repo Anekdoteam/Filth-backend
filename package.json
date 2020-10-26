@@ -8,6 +8,7 @@
     "lint": "npx eslint ./"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
     "connect-flash": "^0.1.1",
     "cookie-parser": "latest",
     "cors": "^2.8.5",
