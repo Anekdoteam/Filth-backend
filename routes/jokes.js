@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
-var pgp = require('pg-promise')(/* options */);
+
+var db = require('./../database.js');
 
 require('dotenv').config();			// Now require dotenv for environment variables
 
@@ -10,8 +11,6 @@ const POSTGRES_USER = process.env.PGUSER.replace('/["]+/', '');
 const POSTGRES_PASSWORD = process.env.PGPW.replace('/["]+/', '');
 const POSTGRES_HOST = process.env.PGHOST.replace('/["]+/', '');
 const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
-
-var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth');
 
 router.get('/', function(req, res, next) {
   next(createError(403));
@@ -225,4 +224,4 @@ router.get('/likeJoke/:uid/:jid', function(req, res, next) {
 });
 
 
-module.exports = router;
+module.exports = router, db;

@@ -4,7 +4,10 @@ var createError = require('http-errors');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var bodyParser = require('body-parser');
-var pgp = require('pg-promise')(/* options */);
+
+var db = require('./../database.js');
+
+console.log("DEBUG DB OBJ: " + db);
 
 router.use(bodyParser.urlencoded({extended: true}));
 router.use(bodyParser.json());
@@ -14,14 +17,12 @@ const POSTGRES_PASSWORD = process.env.PGPW.replace('/["]+/', '');
 const POSTGRES_HOST = process.env.PGHOST.replace('/["]+/', '');
 const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
 
-var db = pgp('postgres://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/Filth');
-
+/// Это стратегия аутентификации, для аутентификации используются URLEncoded параметры username и password
 passport.use(new LocalStrategy((username, password, done) => {
   console.log("Data for strategy: " + username + ", " + password);
   db.oneOrNone('SELECT "password" FROM "public"."User" WHERE "username" = $1;', username).then(function (data, credentials) {
     console.log("username: " + username);
     if (!data) {
-      console.log("works");
       return done(null, false, {message: "User not found"});
     } else {
       console.log("Type of cred: " + typeof(credentials.password) + " and type of dbpw: " + typeof(data));
@@ -30,14 +31,12 @@ passport.use(new LocalStrategy((username, password, done) => {
 
       if (data.trim() == credentials.password.trim()) {
         console.log("Password correct");
-        return done(null, {un: username, pw: data.trim()});
+        return done(null, username);
       } else {
         console.log("Password incorrect.");
         data = null;
         return done(null, false, {message: "Password incorrect"});
       }
-
-      //if (data)
     }
   }.bind(null, password)).catch((error) => {
     console.log('ERROR: ', error);
@@ -45,28 +44,32 @@ passport.use(new LocalStrategy((username, password, done) => {
   });
 }));
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+/// Сериализуем пользователя в куки
+passport.serializeUser((username, done) => {
+  done(null, username);
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
+/// Получаем пользователя из куки
+passport.deserializeUser((username, done) => {
+	done(null, username);
 });
 
-router.post('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (req, res, next) => {
-  console.log("Request body: " + JSON.stringify(req.body));
+router.post('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login'}), function (req, res) {
+	if (req.isAuthenticated()) {
+    	console.log("You are authenticated"); 
+ 	}
+ 	console.log("Req: " + JSON.stringify(req));
+    console.log("Request body: " + JSON.stringify(req.body));
 
-  //res.redirect('/');
-  res.json({"ok": true});
 });
 
-router.get('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (req, res, next) => {
+router.get('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login'}), function (req, res) {
   if (req.isAuthenticated()) {
     console.log("You are authenticated"); 
   }
+  console.log("Req: " + JSON.stringify(req));
   console.log("Request body: " + JSON.stringify(req.body));
 
-  res.json({"ok": true});
 });
 
 
