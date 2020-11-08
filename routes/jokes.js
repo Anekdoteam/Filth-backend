@@ -4,13 +4,13 @@ var createError = require('http-errors');
 
 var db = require('./../database.js');
 
-require('dotenv').config();			// Now require dotenv for environment variables
+/*require('dotenv').config();			// Now require dotenv for environment variables
 
 // Connect to database using environment variables
 const POSTGRES_USER = process.env.PGUSER.replace('/["]+/', '');
 const POSTGRES_PASSWORD = process.env.PGPW.replace('/["]+/', '');
 const POSTGRES_HOST = process.env.PGHOST.replace('/["]+/', '');
-const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');
+const POSTGRES_PORT = process.env.PGPORT.replace('/["]+/', '');*/
 
 router.get('/', function(req, res, next) {
   next(createError(403));

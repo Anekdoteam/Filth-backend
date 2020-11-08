@@ -1,5 +1,5 @@
 var pgp = require('pg-promise')(/* options */);
-
+require('dotenv').config();			// require dotenv for environment variables
 
 
 // Connect to database using environment variables
