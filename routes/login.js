@@ -4,6 +4,7 @@ var createError = require('http-errors');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt');
 
 var db = require('./../database.js');
 
@@ -26,17 +27,17 @@ passport.use(new LocalStrategy((username, password, done) => {
       return done(null, false, {message: "User not found"});
     } else {
       console.log("Type of cred: " + typeof(credentials.password) + " and type of dbpw: " + typeof(data));
-
-      console.log("Passwords: " + data.valueOf() + " and " + credentials.password.valueOf());
-
-      if (data.trim() == credentials.password.trim()) {
-        console.log("Password correct");
-        return done(null, username);
-      } else {
-        console.log("Password incorrect.");
-        data = null;
-        return done(null, false, {message: "Password incorrect"});
-      }
+ 
+      console.log("pass from user: " + credentials.password.trim() + ", pass from db: " + data.trim());
+      bcrypt.compare(data.trim(), credentials.password.trim(), (err, result) => {
+      	if (result == true) {
+      		console.log("Password correct");
+        	return done(null, username);
+      	} else {
+        	console.log("Password incorrect, error: " + err);
+        	return done(null, false, {message: "Password incorrect"});
+      	}
+      });
     }
   }.bind(null, password)).catch((error) => {
     console.log('ERROR: ', error);

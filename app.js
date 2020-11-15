@@ -12,6 +12,7 @@ var bodyParser = require('body-parser');
 var indexRouter = require('./routes/index');
 var jokesRouter = require('./routes/jokes');
 var loginRouter = require('./routes/login');
+var registerRouter = require('./routes/register');
 
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
@@ -47,6 +48,7 @@ app.disable("x-powered-by");
 app.use('/', indexRouter);
 app.use('/jokes', jokesRouter);
 app.use('/login', loginRouter);
+app.use('/register', registerRouter);
 /*app.post('/login', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (res, req) => {
 res.json({lol: "kek"});
 });/*/

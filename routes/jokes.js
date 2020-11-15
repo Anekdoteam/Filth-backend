@@ -224,4 +224,4 @@ router.get('/likeJoke/:uid/:jid', function(req, res, next) {
 });
 
 
-module.exports = router, db;
+module.exports = router;
