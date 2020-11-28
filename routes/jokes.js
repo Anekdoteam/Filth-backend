@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
+var bodyParser = require('body-parser');
 
 var db = require('./../database.js');
 
@@ -60,27 +61,28 @@ router.get('/getJokesByTag/:tag', function(req, res, next) {
 
 
 /// Параметры - name (название шутки), content (текст шутки) и tags (массив тэгов). 
-router.get('/addJoke*', function(req, res,next) {
-  db.oneOrNone('SELECT * FROM "public"."Joke" WHERE "content" = $1', req.query.content).then(data => {
+router.post('/addJoke*', function(req, res,next) {
+    console.log("[!!!!!] BODY: ", req.body);
+  db.oneOrNone('SELECT * FROM "public"."Joke" WHERE "content" = $1', req.body.content).then(data => {
     console.log("Unique checking: " + data);
     if (data == null) {
-      if (Array.isArray(req.query.tags)) {
+      if (Array.isArray(req.body.tags)) {
         console.log("tags is array, so there're 2 or more tags.");
       } else console.log("Just one tag.");
 
-      if (req.query.tags.length != 0) {
+      if (req.body.tags.length != 0) {
         var cycleCounter;
-        if (Array.isArray(req.query.tags)) {
-          cycleCounter = req.query.tags.length;
+        if (Array.isArray(req.body.tags)) {
+          cycleCounter = req.body.tags.length;
         } else cycleCounter = 1;
 
         for (var i = 0; i < cycleCounter; i++) {
           let tagsArray;
-          if (Array.isArray(req.query.tags)) {
-            console.log("Checking array:", req.query.tags[i]);
-            tagsArray = req.query.tags[i];
+          if (Array.isArray(req.body.tags)) {
+            console.log("Checking array:", req.body.tags[i]);
+            tagsArray = req.body.tags[i];
           } else {
-            tagsArray = req.query.tags;
+            tagsArray = req.body.tags;
           }
 
           db.oneOrNone('SELECT "tid" FROM "public"."Tag" WHERE "name" = $1;', tagsArray).then(function(tagsArray, iter, data) {
@@ -103,7 +105,7 @@ router.get('/addJoke*', function(req, res,next) {
           });
         }   
 
-        db.any('INSERT INTO "public"."Joke"(content, title) VALUES ($1, $2)', [req.query.content, req.query.name]).then(function(data) {
+        db.any('INSERT INTO "public"."Joke"(content, title) VALUES ($1, $2)', [req.body.content, req.body.name]).then(function(data) {
           console.log("Joke inserted successfuly, jid: " + data.jid);
           console.log(data);
         }).catch(function(error) {
@@ -112,15 +114,15 @@ router.get('/addJoke*', function(req, res,next) {
         });
 
         var que = 'SELECT tid FROM "public"."Tag" WHERE "name" IN (';
-        console.log("Length: " + req.query.tags.length);
+        console.log("Length: " + req.body.tags.length);
         for (var i = 0; i < cycleCounter; i++) {
-          console.log(req.query.tags[i]);
-          if (Array.isArray(req.query.tags)) {
+          console.log(req.body.tags[i]);
+          if (Array.isArray(req.body.tags)) {
             if (i == 0) {
-              que = que.concat("'", req.query.tags[i], "'");
-            } else que = que.concat(", '", req.query.tags[i], "'");
+              que = que.concat("'", req.body.tags[i], "'");
+            } else que = que.concat(", '", req.body.tags[i], "'");
           } else {
-            que = que.concat("'", req.query.tags, "'");
+            que = que.concat("'", req.body.tags, "'");
           }
 
         }
@@ -135,7 +137,7 @@ router.get('/addJoke*', function(req, res,next) {
             }
           }
           console.log("Saved ids: " + array);
-          db.one('SELECT jid FROM "public"."Joke" WHERE "content" = $1;', req.query.content).then((data) => {
+          db.one('SELECT jid FROM "public"."Joke" WHERE "content" = $1;', req.body.content).then((data) => {
             console.log("Data: ", data.jid);
             for (var i = 0; i < array.length; i++) {
               db.any('INSERT INTO "public"."JokesTags" VALUES ($1, $2)', [data.jid, array[i]]).then((data) => {
