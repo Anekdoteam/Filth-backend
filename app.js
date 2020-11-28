@@ -5,13 +5,14 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var flash = require('connect-flash');
-var session = require('express-session');
+var session = require('cookie-session');
 
 var bodyParser = require('body-parser');
 
 var indexRouter = require('./routes/index');
 var jokesRouter = require('./routes/jokes');
 var loginRouter = require('./routes/login');
+var registerRouter = require('./routes/register');
 
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
@@ -22,7 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser('bruev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(session({cookie: {maxAge: 6000}, secret: 'bruev', resave: true, saveUninitialized: true}));
+app.use(session({name: 'sampleCookie', keys: ['bruev'], maxAge: 30 * 24 * 60 * 60 * 1000}));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -47,6 +48,7 @@ app.disable("x-powered-by");
 app.use('/', indexRouter);
 app.use('/jokes', jokesRouter);
 app.use('/login', loginRouter);
+app.use('/register', registerRouter);
 /*app.post('/login', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (res, req) => {
 res.json({lol: "kek"});
 });/*/
