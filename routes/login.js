@@ -67,6 +67,8 @@ router.post('/', passport.authenticate('local', {successRedirect: '/', failureRe
 
 router.get('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login/check'}), function (req, res) {
   if (req.isAuthenticated()) {
+  	res.append('Access-Control-Allow-Credentials', true);
+  	res.json({'success': true, 'message': 'Auth successful'});
     console.log("You are authenticated"); 
   }
   console.log("Req: " + JSON.stringify(req));
