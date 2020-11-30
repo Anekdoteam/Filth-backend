@@ -23,7 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser('bruev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(session({name: 'sampleCookie', keys: ['bruev'], maxAge: 30 * 24 * 60 * 60 * 1000}));
+app.use(session({name: 'sampleCookie', keys: ['bruev'], maxAge: 30 * 24 * 60 * 60 * 1000, domain: '.site-smeshnoy.me', saveUninitialized: false, resave: true}));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -33,7 +33,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(logger('dev'));
-app.use(cors());
+app.use(cors({
+  origin: 'http://front.site-smeshnoy.me:3000',
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
