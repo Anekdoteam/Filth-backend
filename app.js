@@ -37,8 +37,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-
-
+// Disable caching of pages
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+})
 
 
 app.use(flash());
@@ -49,9 +52,6 @@ app.use('/', indexRouter);
 app.use('/jokes', jokesRouter);
 app.use('/login', loginRouter);
 app.use('/register', registerRouter);
-/*app.post('/login', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (res, req) => {
-res.json({lol: "kek"});
-});/*/
 
 
 

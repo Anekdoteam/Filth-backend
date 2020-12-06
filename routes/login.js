@@ -55,17 +55,21 @@ passport.deserializeUser((username, done) => {
 	done(null, username);
 });
 
-router.post('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login/check'}), function (req, res) {
+// Now redirecting to /failure in case of failed auth
+router.post('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login/failure'}), function (req, res) {
 
 	if (req.isAuthenticated()) {
-    	console.log("You are authenticated"); 
+    	res.append('Access-Control-Allow-Credentials', true);
+  		res.json({'success': true, 'message': 'Auth successful'});
+   		console.log("You are authenticated"); 
  	}
  	console.log("Req: " + JSON.stringify(req));
     console.log("Request body: " + JSON.stringify(req.body));
 
 });
 
-router.get('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login/check'}), function (req, res) {
+// This endpoint is for testing purposes only and will be removed someday
+router.get('/', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login'}), function (req, res) {
   if (req.isAuthenticated()) {
   	res.append('Access-Control-Allow-Credentials', true);
   	res.json({'success': true, 'message': 'Auth successful'});
@@ -95,6 +99,10 @@ router.get('/check', checkAuth, (req, res) => {
 router.get('/logout', (req, res) => {
 	req.logout();
 	res.redirect('/login');
+})
+
+router.post('/failure', (req, res) => {
+	res.json({'success': false, 'error': 'Wrong credentials.'});
 })
 
 
