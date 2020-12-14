@@ -17,7 +17,7 @@ router.post('/', (req, res, next) => {
     	bcrypt.hash(req.body.password, salt, function(err, hash) {
         	db.oneOrNone('INSERT INTO "public"."User" (username, password, email) VALUES ($1, $2, $3) RETURNING uid', [req.body.username, hash, req.body.email]).then((data) => {
 				console.log("Inserted new user successfuly, id: " + data.uid);
-				res.json("200 OK");
+				res.json({'success': true, 'message': "Registration successful"});
 			}).catch((error) => {
 				console.log('ERROR: ', error);
 		        res.json({'success': false, 'error': error});

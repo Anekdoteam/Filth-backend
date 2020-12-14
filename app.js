@@ -42,8 +42,6 @@ app.use(express.urlencoded({ extended: false }));
 
 
 
-
-
 app.use(flash());
 // Disable x-powered-by fingerprinting
 app.disable("x-powered-by");
@@ -52,9 +50,6 @@ app.use('/', indexRouter);
 app.use('/jokes', jokesRouter);
 app.use('/login', loginRouter);
 app.use('/register', registerRouter);
-/*app.post('/login', passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login', failureFlash: true}), (res, req) => {
-res.json({lol: "kek"});
-});/*/
 
 
 
