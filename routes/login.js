@@ -99,7 +99,7 @@ router.get('/check', checkAuth, (req, res) => {
 
 router.get('/logout', (req, res) => {
 	req.logout();
-	res.redirect('/login');
+    res.json({'success': true, 'message': 'Logged out.'})
 })
 
 router.post('/failure', (req, res) => {
