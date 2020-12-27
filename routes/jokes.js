@@ -77,7 +77,7 @@ router.post('/addJoke*', function(req, res, next) {
     if (req.isAuthenticated()) {
         var userId = null;
         // WARNING! This part wasn't tested due to lack of possibility of testing POST requests with cookies. This might not work!
-        db.one('SELECT "uid" FROM "public"."Users" WHERE "username" = $1', req.user).then(data => {
+        db.one('SELECT "uid" FROM "public"."User" WHERE "username" = $1', req.user).then(data => {
             userID = data.uid;
             db.oneOrNone('SELECT * FROM "public"."Joke" WHERE "content" = $1', req.body.content).then(data => {
                 console.log("Unique checking: " + data);
@@ -216,9 +216,7 @@ router.post('/addJoke*', function(req, res, next) {
                 'error': error
             });
         });
-
-        console.log("selected uid: ", userId);
-
+    console.log("selected uid: ", userId);
 
     } else {
         res.json({
